@@ -14,12 +14,6 @@ import (
 	"strings"
 )
 
-// InitRouter query.collection.format默认为 csv , gin 框架 QueryArray 不支持， 修改为 multi
-// @termsOfService https://gitlab.paradeum.com/pld/cloud-batch
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
-// @query.collection.format multi
 func InitRouter() *gin.Engine {
 	r := gin.New()
 

@@ -85,14 +85,15 @@ func BatchGetServers(c *gin.Context) {
 
 	urlValues := url.Values{}
 
-	// 结果返回字段
-	urlValues.Add("field", "id")
-	urlValues.Add("field", "name")
-	urlValues.Add("field", "eip")
-	urlValues.Add("field", "ips")
-	urlValues.Add("field", "zone_ext_id")
-	urlValues.Add("field", "provider")
-	urlValues.Add("field", "status")
+	// 结果返回字段, 因为不能指定 metadata 字段返回，弃用
+	//urlValues.Add("field", "id")
+	//urlValues.Add("field", "name")
+	//urlValues.Add("field", "eip")
+	//urlValues.Add("field", "ips")
+	//urlValues.Add("field", "zone_ext_id")
+	//urlValues.Add("field", "metadata")
+	//urlValues.Add("field", "provider")
+	//urlValues.Add("field", "status")
 
 	// 查询状态数组
 	if status != nil && len(status) > 0 {
