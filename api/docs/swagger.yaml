@@ -1,0 +1,273 @@
+definitions:
+  app.ResponseString:
+    properties:
+      code:
+        type: string
+      data:
+        type: object
+      errDetail:
+        type: object
+      msg:
+        type: string
+      requestId:
+        type: string
+    type: object
+  models.Auth:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 5
+        type: string
+      username:
+        maxLength: 20
+        minLength: 5
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.BatchCreateServersForm:
+    properties:
+      count:
+        default: 1
+        description: 创建数量
+        enum:
+        - 1
+        - 2
+        - 5
+        - 10
+        - 20
+        - 50
+        - 100
+        type: integer
+      cpu_core_count:
+        default: 4
+        description: cpu 核数
+        enum:
+        - 1
+        - 2
+        - 4
+        - 8
+        - 16
+        type: integer
+      memory_size_mb:
+        default: 8192
+        description: 内存（单位 M)
+        enum:
+        - 512
+        - 1024
+        - 2048
+        - 4096
+        - 8192
+        - 16384
+        type: integer
+      project:
+        default: bfs
+        description: 项目标签
+        enum:
+        - bfs
+        - dfs
+        type: string
+      provider:
+        default: aliyun
+        description: 云提供者
+        enum:
+        - aliyun
+        type: string
+      region_scope:
+        default: cnml
+        description: '区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东'
+        enum:
+        - all
+        - cnml
+        - cn
+        - us
+        - ap
+        - me
+        - eu
+        type: string
+    required:
+    - count
+    - cpu_core_count
+    - memory_size_mb
+    - project
+    - provider
+    - region_scope
+    type: object
+  models.UpdateAuth:
+    properties:
+      oldPassword:
+        maxLength: 20
+        minLength: 5
+        type: string
+      password:
+        maxLength: 20
+        minLength: 8
+        type: string
+      username:
+        maxLength: 20
+        minLength: 5
+        type: string
+    required:
+    - oldPassword
+    - password
+    - username
+    type: object
+info:
+  contact: {}
+  termsOfService: https://gitlab.paradeum.com/pld/cloud-batch
+paths:
+  /auth/login:
+    post:
+      parameters:
+      - description: auth
+        in: body
+        name: auth
+        required: true
+        schema:
+          $ref: '#/definitions/models.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      summary: post Auth
+      tags:
+      - Auth
+  /auth/passwd:
+    put:
+      parameters:
+      - description: updateAuth
+        in: body
+        name: updateAuth
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateAuth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "401":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      security:
+      - ApiKeyAuth: []
+      summary: Update password
+      tags:
+      - Auth
+  /batch/servers:
+    post:
+      parameters:
+      - description: batchCreateServers
+        in: body
+        name: batchCreateServers
+        required: true
+        schema:
+          $ref: '#/definitions/models.BatchCreateServersForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      security:
+      - ApiKeyAuth: []
+      summary: Batch Create Servers
+      tags:
+      - Servers
+  /servers:
+    get:
+      parameters:
+      - default: bfs
+        description: project
+        in: query
+        name: project
+        type: string
+      - default: aliyun
+        description: provider
+        in: query
+        name: provider
+        required: true
+        type: string
+      - collectionFormat: multi
+        description: status
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - description: batch_number
+        in: query
+        name: batch_number
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      summary: Batch Get Servers
+      tags:
+      - Servers
+  /version:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      summary: Get Version
+      tags:
+      - Version
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
