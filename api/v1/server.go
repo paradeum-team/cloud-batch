@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/pkg/errors"
 	"net/url"
 )
 
@@ -126,4 +127,46 @@ func BatchGetServers(c *gin.Context) {
 	}
 
 	appG.ResponseI18nMsgSimple(e.StatusOK, nil, shortServersResponse)
+}
+
+// BatchDeleteServers
+// @Summary Batch Get Servers
+// @Tags Servers
+// @Produce  json
+// @Security ApiKeyAuth
+// @Param batchDeleteServersForm body models.BatchDeleteServersForm true "batchDeleteServersForm"
+// @Success 200 {object} app.ResponseString
+// @Failure 500 {object} app.ResponseString
+// @Failure default {object} app.ResponseString
+// @Router /batch/servers [delete]
+func BatchDeleteServers(c *gin.Context) {
+	var (
+		appG              = app.Gin{C: c}
+		deleteServersForm = models.BatchDeleteServersForm{}
+	)
+
+	err := c.BindJSON(&deleteServersForm)
+	if err != nil {
+		code := app.VerdictJsonErr(err)
+		appG.ResponseI18nMsgSimple(code, err, nil)
+		return
+	}
+
+	if (deleteServersForm.IDs == nil || len(deleteServersForm.IDs) == 0) && (deleteServersForm.Provider == "" || deleteServersForm.Project == "") {
+		appG.ResponseI18nMsgSimple(e.InvalidParameter, errors.New("如果IDs 为空，则必须填写 Provider 和 project 参数"), nil)
+		return
+	}
+
+	serverCount, doneCount, errIDs, err := servie_cloudpods.BatchDeleteServers(deleteServersForm)
+	if err != nil {
+		appG.ResponseI18nMsgSimple(e.InternalError, err, nil)
+		return
+	}
+
+	if serverCount == 0 {
+		appG.ResponseI18nMsgSimple(e.NotFound, errors.New("serverCount is 0"),nil)
+		return
+	}
+
+	appG.ResponseI18nMsgSimple(e.StatusOK, nil, gin.H{"server_count": serverCount, "done_count": doneCount, "errIds": errIDs})
 }

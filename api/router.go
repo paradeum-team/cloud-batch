@@ -69,6 +69,7 @@ func InitRouter() *gin.Engine {
 		batch.Use(middleware.JWT())
 		{
 			batch.POST("servers", v1.BatchCreateServers)
+			batch.DELETE("servers", v1.BatchDeleteServers)
 		}
 	}
 

@@ -10,6 +10,7 @@ InvalidParameterLength = "{{.Name}} 必须在 0 - {{.MaxLength}} 字符之间。
 ParametherNotAllowedEmpty = "参数 {{.Name}} 不允许为空。"
 InvalidParameterValue = "参数 {{.Name}} 值校验不通过。"
 InappropriateJSON = "JSON 值校验不通过。"
+NotFound = "按条件查询没找到"
 
 [MyUnreadEmails]
 description = "The number of unread emails I have"
