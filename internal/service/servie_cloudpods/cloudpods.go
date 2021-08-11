@@ -595,24 +595,82 @@ func CreateServer(serverCreate *models.ServerCreate) (*models.Server, *models.Cl
 	return server, nil, nil
 }
 
-func DeleteServer(idOrName string, queryParams map[string]string) (*models.CloudError, error) {
+func DeleteServer(idOrName string, queryParams map[string]string) ([]byte, *models.CloudError, error) {
 	client, err := NewRestyAuthClient()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	resp, err := client.R().
 		SetQueryParams(queryParams).
 		Delete(fmt.Sprintf("%s/%s/%s", configs.Cloudpods.BaseUrl, serversPath, idOrName))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if resp.StatusCode() != http.StatusOK {
 		cloudErr, err := generateCloudError(resp.Body())
-		return cloudErr, err
+		return nil, cloudErr, err
 	}
 
-	return nil, nil
+	return resp.Body(), nil, nil
+}
+
+func BatchDeleteServers(deleteServersForm models.BatchDeleteServersForm) (serverCount, doneCount int, errIDs []string, err error) {
+	deleteQueryParams := map[string]string{
+		"OverridePendingDelete": "true",
+	}
+
+	// 如果 有 ids 数据，忽略其它参数
+	if deleteServersForm.IDs != nil && len(deleteServersForm.IDs) > 0 && deleteServersForm.IDs[0] != ""{
+		for _, id := range deleteServersForm.IDs {
+			_, cloudErr, err := DeleteServer(id, deleteQueryParams)
+			if err != nil {
+				logging.Logger.Errorf("DeleteServer id: %s, cloudErr: %v, err: %v", id, cloudErr, err)
+				errIDs = append(errIDs, id)
+			}
+			doneCount++
+		}
+		return len(deleteServersForm.IDs), doneCount, errIDs, nil
+	}
+
+	// 如果 ids 数据 ，按 其它参数 查询 servers
+	urlValues := url.Values{}
+
+	// 查询过滤字段
+	urlValues.Set("provider", deleteServersForm.Provider)
+	urlValues.Set("tags.0.key", "user:project")
+	if deleteServersForm.Project != "" {
+		urlValues.Set("tags.0.value", deleteServersForm.Project)
+	}
+	if deleteServersForm.BatchNumber != "" {
+		urlValues.Set("tags.1.key", "user:batchNumber")
+		urlValues.Set("tags.1.value", deleteServersForm.BatchNumber)
+	}
+
+	resp, _, err := ListServers(nil, urlValues)
+	if err != nil {
+		return 0, 0, nil, err
+	}
+
+	shortServerResponse := new(models.ShortServersResponse)
+	err = json.Unmarshal(resp, shortServerResponse)
+	if err != nil {
+		return 0, 0, nil, err
+	}
+
+	if shortServerResponse.Total == 0 {
+		return shortServerResponse.Total, 0, nil, nil
+	}
+
+	for _, server := range shortServerResponse.Servers {
+		_, cloudErr, err := DeleteServer(server.ID, deleteQueryParams)
+		if err != nil {
+			logging.Logger.Errorf("DeleteServer  id: %s, cloudErr: %v, err: %v", server.ID, cloudErr, err)
+			errIDs = append(errIDs, server.ID)
+		}
+		doneCount++
+	}
+	return shortServerResponse.Total, doneCount, errIDs, nil
 }
 
 // BatchCreateServers 批量创建主机

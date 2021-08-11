@@ -94,6 +94,45 @@ definitions:
     - provider
     - region_scope
     type: object
+  models.BatchDeleteServersForm:
+    properties:
+      batch_number:
+        description: 创建主机的批号
+        maxLength: 14
+        minLength: 14
+        type: string
+      ids:
+        description: 主机 ids, 如果设置了 ids, 忽略其它参数
+        items:
+          type: string
+        type: array
+      project:
+        default: test
+        description: 项目标签
+        enum:
+        - bfs
+        - dfs
+        - test
+        type: string
+      provider:
+        default: aliyun
+        description: 云提供者
+        enum:
+        - aliyun
+        type: string
+      region_scope:
+        default: cnml
+        description: '区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东'
+        enum:
+        - all
+        - cnml
+        - cn
+        - us
+        - ap
+        - me
+        - eu
+        type: string
+    type: object
   models.UpdateAuth:
     properties:
       oldPassword:
@@ -178,6 +217,34 @@ paths:
       tags:
       - Auth
   /batch/servers:
+    delete:
+      parameters:
+      - description: batchDeleteServersForm
+        in: body
+        name: batchDeleteServersForm
+        required: true
+        schema:
+          $ref: '#/definitions/models.BatchDeleteServersForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      security:
+      - ApiKeyAuth: []
+      summary: Batch Get Servers
+      tags:
+      - Servers
     post:
       parameters:
       - description: batchCreateServers

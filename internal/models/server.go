@@ -35,6 +35,19 @@ type BatchCreateServersForm struct {
 	Count int `json:"count" binding:"required,gte=1,lte=100" enums:"1,2,5,10,20,50,100" default:"1" required:"true"`
 }
 
+type BatchDeleteServersForm struct {
+	// 主机 ids, 如果设置了 ids, 忽略其它参数
+	IDs []string `json:"ids"`
+	// 区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东
+	RegionScope string `json:"region_scope" binding:"min=2,max=10" enums:"all,cnml,cn,us,ap,me,eu" default:"cnml"`
+	// 创建主机的批号
+	BatchNumber string `json:"batch_number" binding:"min=0,max=14" minLength:"14" maxLength:"14"`
+	// 项目标签
+	Project string `json:"project" binding:"min=2,max=20" enums:"bfs,dfs,test" default:"test" required:"true"`
+	// 云提供者
+	Provider string `json:"provider" binding:"min=2,max=20" enums:"aliyun" default:"aliyun" required:"true"`
+}
+
 type BatchCreateServersResponse struct {
 	Ids         []string `json:"ids"`
 	Count       int      `json:"count"`
@@ -50,19 +63,19 @@ type ShortServersResponse struct {
 }
 
 type ShortServer struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Eip       string `json:"eip"`
-	Ips       string `json:"ips"`
-	ZoneExtID string `json:"zone_ext_id"`
-	ServerMetadata   ServerMetadata `json:"metadata"`
-	Provider  string `json:"provider"`
-	Status    string `json:"status"`
+	ID             string         `json:"id"`
+	Name           string         `json:"name"`
+	Eip            string         `json:"eip"`
+	Ips            string         `json:"ips"`
+	ZoneExtID      string         `json:"zone_ext_id"`
+	ServerMetadata ServerMetadata `json:"metadata"`
+	Provider       string         `json:"provider"`
+	Status         string         `json:"status"`
 }
 
 type ServerMetadata struct {
 	UserBatchNumber string `json:"user:batchNumber"`
-	UserProject string `json:"user:project"`
+	UserProject     string `json:"user:project"`
 }
 
 type ServersResponse struct {

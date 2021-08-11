@@ -39,4 +39,5 @@ var (
 	InvalidParameterLength    = New("InvalidParameterLength", http.StatusBadRequest)    // 参数必须在0 - {{.MaxLength))之间
 	ParametherNotAllowedEmpty = New("ParametherNotAllowedEmpty", http.StatusBadRequest) // {{.Name))参数不允许为空
 	InvalidParameterValue     = New("InvalidParameterValue", http.StatusBadRequest)     // 参数{{.Name))值校验不通过, 用于确定单一参数
+	NotFound                  = New("NotFound", http.StatusNotFound)
 )

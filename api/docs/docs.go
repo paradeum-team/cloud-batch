@@ -165,6 +165,51 @@ var doc = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Batch Get Servers",
+                "parameters": [
+                    {
+                        "description": "batchDeleteServersForm",
+                        "name": "batchDeleteServersForm",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BatchDeleteServersForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    }
+                }
             }
         },
         "/servers": {
@@ -354,6 +399,56 @@ var doc = `{
                     "enum": [
                         "bfs",
                         "dfs"
+                    ]
+                },
+                "provider": {
+                    "description": "云提供者",
+                    "type": "string",
+                    "default": "aliyun",
+                    "enum": [
+                        "aliyun"
+                    ]
+                },
+                "region_scope": {
+                    "description": "区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东",
+                    "type": "string",
+                    "default": "cnml",
+                    "enum": [
+                        "all",
+                        "cnml",
+                        "cn",
+                        "us",
+                        "ap",
+                        "me",
+                        "eu"
+                    ]
+                }
+            }
+        },
+        "models.BatchDeleteServersForm": {
+            "type": "object",
+            "properties": {
+                "batch_number": {
+                    "description": "创建主机的批号",
+                    "type": "string",
+                    "maxLength": 14,
+                    "minLength": 14
+                },
+                "ids": {
+                    "description": "主机 ids, 如果设置了 ids, 忽略其它参数",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "project": {
+                    "description": "项目标签",
+                    "type": "string",
+                    "default": "test",
+                    "enum": [
+                        "bfs",
+                        "dfs",
+                        "test"
                     ]
                 },
                 "provider": {
