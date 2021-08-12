@@ -76,6 +76,7 @@ type ShortServer struct {
 type ServerMetadata struct {
 	UserBatchNumber string `json:"user:batchNumber"`
 	UserProject     string `json:"user:project"`
+	UserCloudBatch     string `json:"user:cloudBatch"`
 }
 
 type ServersResponse struct {

@@ -544,6 +544,8 @@ func ListServers(queryParams map[string]string, urlValues url.Values) ([]byte, *
 		"enabled":   "true",
 		"cloud_env": "public",
 		"with_meta": "true",
+		"tags.0.key": "user:cloudBatch",
+		"tags.0.value": "true",
 	}
 
 	resp, err := client.R().
@@ -638,13 +640,13 @@ func BatchDeleteServers(deleteServersForm models.BatchDeleteServersForm) (server
 
 	// 查询过滤字段
 	urlValues.Set("provider", deleteServersForm.Provider)
-	urlValues.Set("tags.0.key", "user:project")
+	urlValues.Set("tags.1.key", "user:project")
 	if deleteServersForm.Project != "" {
-		urlValues.Set("tags.0.value", deleteServersForm.Project)
+		urlValues.Set("tags.1.value", deleteServersForm.Project)
 	}
 	if deleteServersForm.BatchNumber != "" {
-		urlValues.Set("tags.1.key", "user:batchNumber")
-		urlValues.Set("tags.1.value", deleteServersForm.BatchNumber)
+		urlValues.Set("tags.2.key", "user:batchNumber")
+		urlValues.Set("tags.2.value", deleteServersForm.BatchNumber)
 	}
 
 	resp, _, err := ListServers(nil, urlValues)
@@ -776,7 +778,11 @@ func BatchCreateServers(batchCreateServersForm models.BatchCreateServersForm) (b
 
 		for j := 1; j <= serverCount; j++ {
 			serverCreate := &models.ServerCreate{
-				Meta:               map[string]string{"user:project": batchCreateServersForm.Project, "user:batchNumber": batchNumber},
+				Meta:               map[string]string{
+					"user:project": batchCreateServersForm.Project,
+					"user:batchNumber": batchNumber,
+					"user:cloudBatch": "true",
+				},
 				AutoStart:          true,
 				GenerateName:       fmt.Sprintf("%s-%s-%s-%d", batchCreateServersForm.Project, batchNumber, zone.ID, j),
 				Hypervisor:         batchCreateServersForm.Provider,

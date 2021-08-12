@@ -105,13 +105,14 @@ func BatchGetServers(c *gin.Context) {
 
 	// 查询过滤字段
 	urlValues.Set("provider", provider)
-	urlValues.Set("tags.0.key", "user:project")
+	// 默认提供 tags.0.key tags.0.values 所以这里从1开始
+	urlValues.Set("tags.1.key", "user:project")
 	if project != "" {
-		urlValues.Set("tags.0.value", project)
+		urlValues.Set("tags.1.value", project)
 	}
 	if batchNumber != "" {
-		urlValues.Set("tags.1.key", "user:batchNumber")
-		urlValues.Set("tags.1.value", batchNumber)
+		urlValues.Set("tags.2.key", "user:batchNumber")
+		urlValues.Set("tags.2.value", batchNumber)
 	}
 
 	resp, _, err := servie_cloudpods.ListServers(nil, urlValues)
