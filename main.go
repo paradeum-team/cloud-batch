@@ -18,6 +18,8 @@ import (
 // @in header
 // @name Authorization
 // @query.collection.format multi
+// @title Cloud Batch API
+// @version v0.0.3
 func main() {
 
 	router := api.InitRouter()

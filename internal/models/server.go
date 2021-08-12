@@ -12,10 +12,10 @@ const (
 )
 
 type BatchGetServersForm struct {
-	Project     string   `json:"project" binding:"required,min=2,max=20" enums:"bfs,dfs" default:"bfs" required:"true"`
-	Provider    string   `json:"provider" binding:"required,min=2,max=20" enums:"aliyun" default:"aliyun" required:"true"`
-	BatchNumber string   `json:"batch_number" binding:"required,len=14" minLength:"14" maxLength:"14"`
-	Status      []string `json:"status" binding:"required" enums:"running,deploying,starting,deploy_fail,unknown"`
+	Project     string   `json:"project" binding:"min=2,max=20" `
+	Provider    string   `json:"provider" binding:"min=2,max=20"`
+	BatchNumber string   `json:"batch_number" binding:"len=14"`
+	Status      []string `json:"status"`
 	Limit       int      `json:"limit" binding:"min=1"`
 	Offset      int      `json:"offset" binding:"min=0"`
 }
