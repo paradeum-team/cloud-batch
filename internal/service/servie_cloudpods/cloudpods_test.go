@@ -245,11 +245,12 @@ func TestDeleteServer(t *testing.T) {
 	queryParams := map[string]string{
 		"OverridePendingDelete": "true",
 	}
-	cloudErr, err := DeleteServer("13137a0b-eb33-4ac9-8f12-7ff9d17671a2", queryParams)
+	resp, cloudErr, err := DeleteServer("13137a0b-eb33-4ac9-8f12-7ff9d17671a2", queryParams)
 	if err != nil {
 		t.Error(cloudErr)
 		t.Error(err)
 	}
+	fmt.Println(resp)
 }
 
 func TestCreateServers(t *testing.T) {
