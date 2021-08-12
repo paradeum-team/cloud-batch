@@ -9,7 +9,7 @@ import (
 )
 
 type server struct {
-	ListenAddr          string `split_words:"true" default:"0.0.0.0:8080"`
+	ListenAddr          string `split_words:"true" default:"0.0.0.0:5140"`
 	DefaultReadTimeOut  int    `split_words:"true" default:"60"`
 	DefaultWriteTimeOut int    `split_words:"true" default:"60"`
 	IsOpenMetrics       bool   `split_words:"true" default:"true"`

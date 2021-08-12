@@ -51,9 +51,9 @@ func BatchCreateServers(c *gin.Context) {
 // @Summary Batch Get Servers
 // @Tags Servers
 // @Produce  json
-// @Param project query string false "project" default(bfs)
-// @Param provider query string true "provider" default(aliyun)
-// @Param status query []string false "status"
+// @Param project query string false "project" enums(bfs,dfs,test)
+// @Param provider query string false "provider" enums(aliyun)
+// @Param status query []string false "status" enums(running,deploying,starting,deploy_fail,unknown)
 // @Param batch_number query string false "batch_number"
 // @Success 200 {object} app.ResponseString
 // @Failure 500 {object} app.ResponseString

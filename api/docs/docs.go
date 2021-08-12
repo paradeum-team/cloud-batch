@@ -223,21 +223,33 @@ var doc = `{
                 "summary": "Batch Get Servers",
                 "parameters": [
                     {
+                        "enum": [
+                            "bfs",
+                            "dfs",
+                            "test"
+                        ],
                         "type": "string",
-                        "default": "bfs",
                         "description": "project",
                         "name": "project",
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "aliyun"
+                        ],
                         "type": "string",
-                        "default": "aliyun",
                         "description": "provider",
                         "name": "provider",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
+                        "enum": [
+                            "running",
+                            "deploying",
+                            "starting",
+                            "deploy_fail",
+                            "unknown"
+                        ],
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -521,11 +533,11 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "",
+	Version:     "v0.0.3",
 	Host:        "",
 	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "",
+	Title:       "Cloud Batch API",
 	Description: "",
 }
 

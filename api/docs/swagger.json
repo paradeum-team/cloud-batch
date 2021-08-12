@@ -1,8 +1,10 @@
 {
     "swagger": "2.0",
     "info": {
+        "title": "Cloud Batch API",
         "termsOfService": "https://gitlab.paradeum.com/pld/cloud-batch",
-        "contact": {}
+        "contact": {},
+        "version": "v0.0.3"
     },
     "paths": {
         "/auth/login": {
@@ -203,21 +205,33 @@
                 "summary": "Batch Get Servers",
                 "parameters": [
                     {
+                        "enum": [
+                            "bfs",
+                            "dfs",
+                            "test"
+                        ],
                         "type": "string",
-                        "default": "bfs",
                         "description": "project",
                         "name": "project",
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "aliyun"
+                        ],
                         "type": "string",
-                        "default": "aliyun",
                         "description": "provider",
                         "name": "provider",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
+                        "enum": [
+                            "running",
+                            "deploying",
+                            "starting",
+                            "deploy_fail",
+                            "unknown"
+                        ],
                         "type": "array",
                         "items": {
                             "type": "string"
