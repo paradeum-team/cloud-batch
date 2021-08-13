@@ -6,13 +6,15 @@ import (
 	"cloud-batch/internal/pkg/e"
 	"cloud-batch/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // Login
 // @Summary post Auth
 // @Tags Auth
 // @Produce  json
-// @Param auth body models.Auth true "auth"
+// @Param username formData string true "username"
+// @Param password formData string true "password" format(password)
 // @Success 200 {object} app.ResponseString
 // @Failure 400 {object} app.ResponseString
 // @Failure 500 {object} app.ResponseString
@@ -21,12 +23,22 @@ func Login(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
 		auth = models.Auth{}
+		valid = validator.New()
 	)
 
-	err := c.BindJSON(&auth)
+	auth.Username = c.PostForm("username")
+	auth.Password = c.PostForm("password")
+
+	//authJson,err := json.Marshal(auth)
+	//if err != nil {
+	//	appG.ResponseI18nMsgSimple(e.InvalidParameter, err, nil)
+	//	return
+	//}
+
+	err := valid.Struct(auth)
+
 	if err != nil {
-		code := app.VerdictJsonErr(err)
-		appG.ResponseI18nMsgSimple(code, err, nil)
+		appG.ResponseI18nMsgSimple(e.InvalidParameter, err, nil)
 		return
 	}
 
@@ -46,19 +58,28 @@ func Login(c *gin.Context) {
 // @Tags Auth
 // @Produce  json
 // @Security ApiKeyAuth
-// @Param updateAuth body models.UpdateAuth true "updateAuth"
+// @Param username formData string true "username"
+// @Param password formData string true "password" format(password)
+// @Param old_password formData string true "old password" format(password)
 // @Success 200 {object} app.ResponseString
 // @Failure 400,401 {object} app.ResponseString
 // @Failure 500 {object} app.ResponseString
 // @Router /auth/passwd [put]
 func UpdateAuth(c *gin.Context) {
 
-	appG := app.Gin{C: c}
-	updateAuth := models.UpdateAuth{}
-	err := c.BindJSON(&updateAuth)
+	var(
+		appG = app.Gin{C: c}
+		updateAuth = models.UpdateAuth{}
+		valid = validator.New()
+	)
+
+	updateAuth.Username = c.PostForm("username")
+	updateAuth.Password = c.PostForm("password")
+	updateAuth.OldPassword = c.PostForm("old_password")
+
+	err := valid.Struct(updateAuth)
 	if err != nil {
-		code := app.VerdictJsonErr(err)
-		appG.ResponseI18nMsgSimple(code, err, nil)
+		appG.ResponseI18nMsgSimple(e.InvalidParameter, err, nil)
 		return
 	}
 
