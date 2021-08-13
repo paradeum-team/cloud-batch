@@ -36,13 +36,19 @@ var doc = `{
                 "summary": "post Auth",
                 "parameters": [
                     {
-                        "description": "auth",
-                        "name": "auth",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Auth"
-                        }
+                        "type": "string",
+                        "description": "username",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "password",
+                        "description": "password",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -83,13 +89,27 @@ var doc = `{
                 "summary": "Update password",
                 "parameters": [
                     {
-                        "description": "updateAuth",
-                        "name": "updateAuth",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateAuth"
-                        }
+                        "type": "string",
+                        "description": "username",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "password",
+                        "description": "password",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "password",
+                        "description": "old password",
+                        "name": "old_password",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -335,25 +355,6 @@ var doc = `{
                 }
             }
         },
-        "models.Auth": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 5
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 5
-                }
-            }
-        },
         "models.BatchCreateServersForm": {
             "type": "object",
             "required": [
@@ -484,31 +485,6 @@ var doc = `{
                         "me",
                         "eu"
                     ]
-                }
-            }
-        },
-        "models.UpdateAuth": {
-            "type": "object",
-            "required": [
-                "oldPassword",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "oldPassword": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 5
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 8
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 5
                 }
             }
         }

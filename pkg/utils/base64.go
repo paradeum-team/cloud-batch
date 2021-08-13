@@ -15,3 +15,11 @@ func Base64RawURLDecodeing(d string) (string, error) {
 	}
 	return string(b), nil
 }
+func Base64DecodeStringToString(d string) (string, error) {
+	b, err := base64.StdEncoding.DecodeString(d)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+

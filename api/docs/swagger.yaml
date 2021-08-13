@@ -12,20 +12,6 @@ definitions:
       requestId:
         type: string
     type: object
-  models.Auth:
-    properties:
-      password:
-        maxLength: 20
-        minLength: 5
-        type: string
-      username:
-        maxLength: 20
-        minLength: 5
-        type: string
-    required:
-    - password
-    - username
-    type: object
   models.BatchCreateServersForm:
     properties:
       count:
@@ -133,25 +119,6 @@ definitions:
         - eu
         type: string
     type: object
-  models.UpdateAuth:
-    properties:
-      oldPassword:
-        maxLength: 20
-        minLength: 5
-        type: string
-      password:
-        maxLength: 20
-        minLength: 8
-        type: string
-      username:
-        maxLength: 20
-        minLength: 5
-        type: string
-    required:
-    - oldPassword
-    - password
-    - username
-    type: object
 info:
   contact: {}
   termsOfService: https://gitlab.paradeum.com/pld/cloud-batch
@@ -161,12 +128,17 @@ paths:
   /auth/login:
     post:
       parameters:
-      - description: auth
-        in: body
-        name: auth
+      - description: username
+        in: formData
+        name: username
         required: true
-        schema:
-          $ref: '#/definitions/models.Auth'
+        type: string
+      - description: password
+        format: password
+        in: formData
+        name: password
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -188,12 +160,23 @@ paths:
   /auth/passwd:
     put:
       parameters:
-      - description: updateAuth
-        in: body
-        name: updateAuth
+      - description: username
+        in: formData
+        name: username
         required: true
-        schema:
-          $ref: '#/definitions/models.UpdateAuth'
+        type: string
+      - description: password
+        format: password
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: old password
+        format: password
+        in: formData
+        name: old_password
+        required: true
+        type: string
       produces:
       - application/json
       responses:
