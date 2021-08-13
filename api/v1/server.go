@@ -131,7 +131,7 @@ func BatchGetServers(c *gin.Context) {
 }
 
 // BatchDeleteServers
-// @Summary Batch Get Servers
+// @Summary Batch Delete Servers
 // @Tags Servers
 // @Produce  json
 // @Security ApiKeyAuth
