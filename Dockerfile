@@ -9,7 +9,7 @@ RUN  git describe --tags `git rev-list --tags --max-count=1`|tr -d ' \t\n\r' > .
 
 FROM quay.io/centos/centos:7
 
-RUN yum install -y epel-release && yum install -y ansible && yum cleaen all
+RUN yum install -y epel-release && yum install -y ansible && yum clean all
 
 COPY --from=0 /go/src/cloud-batch/cloud-batch /
 COPY --from=0 /go/src/cloud-batch/assets /assets
