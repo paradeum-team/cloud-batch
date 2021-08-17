@@ -15,6 +15,6 @@ COPY --from=0 /go/src/cloud-batch/cloud-batch /
 COPY --from=0 /go/src/cloud-batch/assets /assets
 COPY --from=0 /go/src/cloud-batch/VERSION /
 
-EXPOSE 8080
+EXPOSE 5140
 
 CMD ["/cloud-batch"]
