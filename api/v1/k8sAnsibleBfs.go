@@ -120,5 +120,4 @@ func K8sAddNodeByBatchNumber(c *gin.Context) {
 	}
 	//err := service_cloudpods.K8sAddNodeByBatchNumber(batchNumber)
 
-
 }

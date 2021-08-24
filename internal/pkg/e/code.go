@@ -77,5 +77,5 @@ const (
 	StatusError    = "error"
 	StatusDone     = "done"
 	StatusConflict = "conflict"
-	StatusTimeout = "timeout"
+	StatusTimeout  = "timeout"
 )

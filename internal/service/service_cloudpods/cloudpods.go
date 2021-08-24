@@ -716,11 +716,13 @@ func BatchCreateServers(batchCreateServersForm models.BatchCreateServersForm) (b
 	instanceTypeFamilys := "'c7','c6','c6a','c5','c4'"
 	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).instance_type_family.in(%s)", instanceTypeFamilys))
 	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).sys_disk_type.contains.('%s')", models.AliyunDiskCloudEfficiency))
+	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).sys_disk_type.cpu_core_count.equals.('%d')", batchCreateServersForm.CpuCoreCount))
+	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).sys_disk_type.memory_size_mb.equals.('%d')", batchCreateServersForm.MemorySizeMb))
 	switch batchCreateServersForm.RegionScope {
 	case models.RegionScopeChinaMainland:
 		zonesUrlValues.Add("filter", fmt.Sprintf("external_id.like('%s/cn-%s')", batchCreateServersForm.Provider, "%"))
 	default:
-		zonesUrlValues.Add("filter", fmt.Sprintf("external_id.like('%s/%s-')", batchCreateServersForm.Provider, batchCreateServersForm.RegionScope))
+		zonesUrlValues.Add("filter", fmt.Sprintf("external_id.like('%s/%s-%s')", batchCreateServersForm.Provider, batchCreateServersForm.RegionScope, "%"))
 	}
 
 	zonesResp, cloudErr, err := ListZones(zonesQueryParams, zonesUrlValues)
@@ -855,9 +857,9 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 		shortServersResponse *models.ShortServersResponse
 		err                  error
 	)
-	// 按批号查询  running、deploy_fail 两种状态的主机，一直到 与createCount相同退出
+	// 按批号查询  running、deploy_fail、disk_file 两种状态的主机，一直到 与createCount相同退出
 	for i := 0; i < 60; i++ {
-		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail"})
+		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail"})
 
 		if err != nil {
 			logging.Logger.Errorf("QueryCreateServersTotal err: %v", err)

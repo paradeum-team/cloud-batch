@@ -22,9 +22,9 @@ const (
 	UpdateK8sAnsibleHostsStatusKeyPre = "updateK8sAnsibleHostsStatus"
 	UpdateK8sAnsibleHostsTTL          = time.Second * 5
 	UpdateK8sAnsibleHostsDoneTTL      = time.Hour * 24
-	AddK8sNodeStatusKeyPre = "addK8sNodeStatus"
-	AddK8sNodeTTL	= time.Minute * 30
-	AddK8sNodeDoneTTL = time.Hour * 24
+	AddK8sNodeStatusKeyPre            = "addK8sNodeStatus"
+	AddK8sNodeTTL                     = time.Minute * 30
+	AddK8sNodeDoneTTL                 = time.Hour * 24
 )
 
 func GetUpdateK8sAnsibleHostsError(status string) error {
@@ -176,14 +176,14 @@ func UpdateK8sAnsibleByServers(batchNumber string, k8sNodeSuf string) (*aini.Inv
 
 func K8sAddNodeByBatchNumber(batchNumber string) error {
 
-	addK8sNodeStatus,err := gredis.Get(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber)).Result()
+	addK8sNodeStatus, err := gredis.Get(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber)).Result()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	err = GetAddK8sNodeError(addK8sNodeStatus)
 	if err != nil {
-		if errors.Is(err,e.ErrStatusError) || errors.Is(err,e.ErrStatusDone) {
+		if errors.Is(err, e.ErrStatusError) || errors.Is(err, e.ErrStatusDone) {
 			return err
 		}
 	}
@@ -204,43 +204,42 @@ func K8sAddNodeByBatchNumber(batchNumber string) error {
 		}
 	}
 
-
-	err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber),e.StatusStart,AddK8sNodeTTL)
+	err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusStart, AddK8sNodeTTL)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-    go addK8sNodes(batchNumber)
+	go addK8sNodes(batchNumber)
 
 	return nil
 }
 
-func addK8sNodes(batchNumber string)  {
+func addK8sNodes(batchNumber string) {
 	// 超时机制
 	ctxt, cancel := context.WithTimeout(context.Background(), AddK8sNodeTTL)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctxt,"%s%s", configs.K8sBfs.AnsibleConfigPath, configs.K8sBfs.K8sAddNodeScript)
+	cmd := exec.CommandContext(ctxt, "%s%s", configs.K8sBfs.AnsibleConfigPath, configs.K8sBfs.K8sAddNodeScript)
 	var buf bytes.Buffer
 	cmd.Stderr = &buf
 
 	if err := cmd.Start(); err != nil {
-		err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber),e.StatusError,AddK8sNodeTTL)
+		err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusError, AddK8sNodeTTL)
 		if err != nil {
-			logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v",err)
+			logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v", err)
 		}
-		logging.Logger.Errorf("addK8sNodes start err: +v",err)
+		logging.Logger.Errorf("addK8sNodes start err: +v", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber),e.StatusError,AddK8sNodeTTL)
+		err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusError, AddK8sNodeTTL)
 		if err != nil {
-			logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v",err)
+			logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v", err)
 		}
-		logging.Logger.Errorf("addK8sNodes wait err: %+v",err)
+		logging.Logger.Errorf("addK8sNodes wait err: %+v", err)
 	}
 
-	if err := gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber),e.StatusError,AddK8sNodeDoneTTL); err != nil {
-		logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v",err)
+	if err := gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusError, AddK8sNodeDoneTTL); err != nil {
+		logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v", err)
 	}
 }

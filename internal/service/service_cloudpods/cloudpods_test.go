@@ -27,6 +27,7 @@ func TestLoginCloudPods(t *testing.T) {
 }
 
 func TestGetAuth(t *testing.T) {
+	TestLoginCloudPods(t)
 	auth, err := GetAuth()
 	if err != nil {
 		t.Error(err)
