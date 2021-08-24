@@ -4,6 +4,7 @@ import (
 	"cloud-batch/configs"
 	"cloud-batch/internal/pkg/logging"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 )
@@ -31,7 +32,7 @@ func Get(key string) ([]byte, error) {
 
 	value, err := db.Get([]byte(key), nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	return value, nil
 }
@@ -39,7 +40,7 @@ func Get(key string) ([]byte, error) {
 func Delete(key string) error {
 	err := db.Delete([]byte(key), nil)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }

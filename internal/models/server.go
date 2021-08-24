@@ -28,7 +28,7 @@ type BatchCreateServersForm struct {
 	// 内存（单位 M)
 	MemorySizeMb int `json:"memory_size_mb" binding:"required,gte=512,lte=16384" enums:"512,1024,2048,4096,8192,16384" default:"8192" required:"true"`
 	// 项目标签
-	Project string `json:"project" binding:"required,min=2,max=20" enums:"bfs,dfs" default:"bfs" required:"true"`
+	Project string `json:"project" binding:"required,min=2,max=20" required:"true"`
 	// 云提供者
 	Provider string `json:"provider" binding:"required,min=2,max=20" enums:"aliyun" default:"aliyun" required:"true"`
 	// 创建数量
@@ -41,9 +41,9 @@ type BatchDeleteServersForm struct {
 	// 区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东
 	RegionScope string `json:"region_scope" binding:"min=2,max=10" enums:"all,cnml,cn,us,ap,me,eu" default:"cnml"`
 	// 创建主机的批号
-	BatchNumber string `json:"batch_number" binding:"min=0,max=14" minLength:"14" maxLength:"14"`
+	BatchNumber string `json:"batch_number" binding:"min=0,max=50" minLength:"14" maxLength:"50"`
 	// 项目标签
-	Project string `json:"project" binding:"min=2,max=20" enums:"bfs,dfs,test" default:"test" required:"true"`
+	Project string `json:"project" binding:"min=2,max=20" default:"test" required:"true"`
 	// 云提供者
 	Provider string `json:"provider" binding:"min=2,max=20" enums:"aliyun" default:"aliyun" required:"true"`
 }
@@ -76,7 +76,7 @@ type ShortServer struct {
 type ServerMetadata struct {
 	UserBatchNumber string `json:"user:batchNumber"`
 	UserProject     string `json:"user:project"`
-	UserCloudBatch     string `json:"user:cloudBatch"`
+	UserCloudBatch  string `json:"user:cloudBatch"`
 }
 
 type ServersResponse struct {

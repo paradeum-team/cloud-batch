@@ -70,3 +70,7 @@ func TestTime(t *testing.T) {
 	fmt.Println(sed)
 	fmt.Println(err)
 }
+
+func TestNowNanoTimeStamp(t *testing.T) {
+	fmt.Println(NowNanoTimeStamp())
+}

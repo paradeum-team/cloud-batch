@@ -140,6 +140,103 @@ var doc = `{
                 }
             }
         },
+        "/batch/bfsUpdateValues": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bfs"
+                ],
+                "summary": "Update Bfs Values",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "batchNumber",
+                        "name": "batch_number",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    }
+                }
+            }
+        },
+        "/batch/k8sAnsibleUpdateHosts": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "K8s"
+                ],
+                "summary": "K8s Ansible Update Hosts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "batchNumber",
+                        "name": "batch_number",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "k8s node suffix",
+                        "name": "k8s_node_suf",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    }
+                }
+            }
+        },
         "/batch/servers": {
             "post": {
                 "security": [
@@ -198,7 +295,7 @@ var doc = `{
                 "tags": [
                     "Servers"
                 ],
-                "summary": "Batch Get Servers",
+                "summary": "Batch Delete Servers",
                 "parameters": [
                     {
                         "description": "batchDeleteServersForm",
@@ -243,12 +340,8 @@ var doc = `{
                 "summary": "Batch Get Servers",
                 "parameters": [
                     {
-                        "enum": [
-                            "bfs",
-                            "dfs",
-                            "test"
-                        ],
                         "type": "string",
+                        "default": "test",
                         "description": "project",
                         "name": "project",
                         "in": "query"
@@ -407,12 +500,7 @@ var doc = `{
                 },
                 "project": {
                     "description": "项目标签",
-                    "type": "string",
-                    "default": "bfs",
-                    "enum": [
-                        "bfs",
-                        "dfs"
-                    ]
+                    "type": "string"
                 },
                 "provider": {
                     "description": "云提供者",
@@ -444,7 +532,7 @@ var doc = `{
                 "batch_number": {
                     "description": "创建主机的批号",
                     "type": "string",
-                    "maxLength": 14,
+                    "maxLength": 50,
                     "minLength": 14
                 },
                 "ids": {
@@ -457,12 +545,7 @@ var doc = `{
                 "project": {
                     "description": "项目标签",
                     "type": "string",
-                    "default": "test",
-                    "enum": [
-                        "bfs",
-                        "dfs",
-                        "test"
-                    ]
+                    "default": "test"
                 },
                 "provider": {
                     "description": "云提供者",

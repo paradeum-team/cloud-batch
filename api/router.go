@@ -70,6 +70,8 @@ func InitRouter() *gin.Engine {
 		{
 			batch.POST("servers", v1.BatchCreateServers)
 			batch.DELETE("servers", v1.BatchDeleteServers)
+			batch.POST("bfsUpdateValues", v1.BfsUpdateValues)
+			batch.POST("k8sAnsibleUpdateHosts", v1.K8sAnsibleUpdateHosts)
 		}
 	}
 

@@ -9,10 +9,15 @@ import (
 
 var bfsTimeTemplate = "20060102150405"
 var timeDay = "20060102"
+var NanoTimeStamp = "20060102150405.999999999"
 
 //获取格式 20060102 日期
 func GetDayStr() string {
 	return time.Now().Format(timeDay)
+}
+
+func NowNanoTimeStamp() string {
+	return time.Now().Format(NanoTimeStamp)
 }
 
 func ConvertBfsTimeToTime(bfsTime string) (time.Time, error) {

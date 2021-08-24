@@ -48,11 +48,7 @@ definitions:
         - 16384
         type: integer
       project:
-        default: bfs
         description: 项目标签
-        enum:
-        - bfs
-        - dfs
         type: string
       provider:
         default: aliyun
@@ -84,7 +80,7 @@ definitions:
     properties:
       batch_number:
         description: 创建主机的批号
-        maxLength: 14
+        maxLength: 50
         minLength: 14
         type: string
       ids:
@@ -95,10 +91,6 @@ definitions:
       project:
         default: test
         description: 项目标签
-        enum:
-        - bfs
-        - dfs
-        - test
         type: string
       provider:
         default: aliyun
@@ -201,6 +193,67 @@ paths:
       summary: Update password
       tags:
       - Auth
+  /batch/bfsUpdateValues:
+    post:
+      parameters:
+      - description: batchNumber
+        in: query
+        name: batch_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      security:
+      - ApiKeyAuth: []
+      summary: Update Bfs Values
+      tags:
+      - Bfs
+  /batch/k8sAnsibleUpdateHosts:
+    post:
+      parameters:
+      - description: batchNumber
+        in: query
+        name: batch_number
+        required: true
+        type: string
+      - description: k8s node suffix
+        in: query
+        name: k8s_node_suf
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      security:
+      - ApiKeyAuth: []
+      summary: K8s Ansible Update Hosts
+      tags:
+      - K8s
   /batch/servers:
     delete:
       parameters:
@@ -227,7 +280,7 @@ paths:
             $ref: '#/definitions/app.ResponseString'
       security:
       - ApiKeyAuth: []
-      summary: Batch Get Servers
+      summary: Batch Delete Servers
       tags:
       - Servers
     post:
@@ -261,11 +314,8 @@ paths:
   /servers:
     get:
       parameters:
-      - description: project
-        enum:
-        - bfs
-        - dfs
-        - test
+      - default: test
+        description: project
         in: query
         name: project
         type: string
