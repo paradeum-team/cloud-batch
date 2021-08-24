@@ -168,15 +168,3 @@ func (g *Gin) ResponseI18nMsg(errCode e.ErrorCode, err error, templateData inter
 
 	return
 }
-
-//func (g *Gin) ResponseMsg(httpCode, errCode int, msg string, data interface{}) {
-//	if errCode != e.SUCCESS && errCode != e.OK {
-//		logger.Warnf("Code: %d, Msg: %s, Data: %v", errCode, msg, data)
-//	}
-//	g.C.JSON(httpCode, Response{
-//		Code: errCode,
-//		Msg:  msg,
-//		Data: data,
-//	})
-//	return
-//}

@@ -21,8 +21,8 @@ import (
 // @Router /auth/login [post]
 func Login(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
-		auth = models.Auth{}
+		appG  = app.Gin{C: c}
+		auth  = models.Auth{}
 		valid = validator.New()
 	)
 
@@ -67,10 +67,10 @@ func Login(c *gin.Context) {
 // @Router /auth/passwd [put]
 func UpdateAuth(c *gin.Context) {
 
-	var(
-		appG = app.Gin{C: c}
+	var (
+		appG       = app.Gin{C: c}
 		updateAuth = models.UpdateAuth{}
-		valid = validator.New()
+		valid      = validator.New()
 	)
 
 	updateAuth.Username = c.PostForm("username")

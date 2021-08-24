@@ -1,17 +1,19 @@
-package servie_cloudpods
+package service_cloudpods
 
 import (
 	"cloud-batch/configs"
 	"cloud-batch/internal/models"
-	"cloud-batch/internal/pkg/db/gleveldb"
+	"cloud-batch/internal/pkg/db/gredis"
+	"cloud-batch/internal/pkg/e"
 	"cloud-batch/internal/pkg/logging"
 	"cloud-batch/pkg/utils"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/pkg/errors"
-	"github.com/syndtr/goleveldb/leveldb"
+	"gopkg.in/redis.v5"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,15 +21,40 @@ import (
 )
 
 const (
-	authKey          = "cloud-auth-cookie"
-	loginPath        = "/api/v1/auth/login"
-	cloudRegionsPath = "/api/v2/cloudregions"
-	zonesPath        = "/api/v2/zones"
-	vpcsPath         = "/api/v2/vpcs"
-	networksPath     = "/api/v2/networks"
-	serverSkusPath   = "/api/v2/serverskus"
-	serversPath      = "/api/v2/servers"
+	authKey                          = "cloud-auth-cookie"
+	loginPath                        = "/api/v1/auth/login"
+	cloudRegionsPath                 = "/api/v2/cloudregions"
+	zonesPath                        = "/api/v2/zones"
+	vpcsPath                         = "/api/v2/vpcs"
+	networksPath                     = "/api/v2/networks"
+	serverSkusPath                   = "/api/v2/serverskus"
+	serversPath                      = "/api/v2/servers"
+	ServerCreateServersStatus        = "batchCreateingServers-status"
+	ServerCreateServersStatusTTL     = time.Hour * 1
+	ServerCreateServersStatusDoneTTL = time.Hour * 24
+	ServerCreating                   = "creating"
+	ServerCreateDone                 = "done"
+	ServerCreateTimeout              = "timeout"
+	ServerCreateError                = "error"
+	ShortServersResponseSaveKeyPre   = "shortServersResponse"
 )
+
+func GetServerCreateError(status string) error {
+	switch status {
+	case ServerCreating:
+		return e.ErrServerCreating
+	case ServerCreateTimeout:
+		return e.ErrServerCreateTimeout
+	case ServerCreateError:
+		return e.ErrServerCreateError
+	case ServerCreateDone:
+		return nil
+	case "":
+		return e.ErrServerCreateStatusEmpty
+	default:
+		return e.ErrUnknownError
+	}
+}
 
 func NewRestyClient(insecureSkipVerify bool) *resty.Client {
 	client := resty.New()
@@ -40,7 +67,7 @@ func NewRestyClient(insecureSkipVerify bool) *resty.Client {
 func NewRestyAuthClient() (*resty.Client, error) {
 	auth, err := GetAuth()
 	if err != nil {
-		if errors.Is(err, leveldb.ErrNotFound) {
+		if errors.Is(err, redis.Nil) {
 			auth, err = Login()
 			if err != nil {
 				return nil, err
@@ -87,7 +114,7 @@ func Login() (string, error) {
 		return "", err
 	}
 
-	err = gleveldb.Save(authKey, string(cookiesJson))
+	err = gredis.Set(authKey, string(cookiesJson), time.Hour*24)
 	if err != nil {
 		return "", err
 	}
@@ -96,8 +123,7 @@ func Login() (string, error) {
 }
 
 func GetAuth() (string, error) {
-	cookieByte, err := gleveldb.Get(authKey)
-
+	cookieByte, err := gredis.Get(authKey).Bytes()
 	if err != nil {
 		return "", err
 	}
@@ -541,10 +567,10 @@ func ListServers(queryParams map[string]string, urlValues url.Values) ([]byte, *
 	}
 
 	defaultQueryParams := map[string]string{
-		"enabled":   "true",
-		"cloud_env": "public",
-		"with_meta": "true",
-		"tags.0.key": "user:cloudBatch",
+		"enabled":      "true",
+		"cloud_env":    "public",
+		"with_meta":    "true",
+		"tags.0.key":   "user:cloudBatch",
 		"tags.0.value": "true",
 	}
 
@@ -623,7 +649,7 @@ func BatchDeleteServers(deleteServersForm models.BatchDeleteServersForm) (server
 	}
 
 	// 如果 有 ids 数据，忽略其它参数
-	if deleteServersForm.IDs != nil && len(deleteServersForm.IDs) > 0 && deleteServersForm.IDs[0] != ""{
+	if deleteServersForm.IDs != nil && len(deleteServersForm.IDs) > 0 && deleteServersForm.IDs[0] != "" {
 		for _, id := range deleteServersForm.IDs {
 			_, cloudErr, err := DeleteServer(id, deleteQueryParams)
 			if err != nil {
@@ -727,8 +753,12 @@ func BatchCreateServers(batchCreateServersForm models.BatchCreateServersForm) (b
 
 	// 结果 ids
 	var ids []string
-	// 批号
-	batchNumber := utils.ConvertTimeToBfsTime(time.Now())
+	batchNumber := utils.NowNanoTimeStamp()
+
+	err = gredis.Set(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber), ServerCreating, ServerCreateServersStatusTTL)
+	if err != nil {
+		return nil, nil, err
+	}
 	// 余数
 	remainder := batchCreateServersForm.Count % len(zones)
 	// 商
@@ -778,10 +808,10 @@ func BatchCreateServers(batchCreateServersForm models.BatchCreateServersForm) (b
 
 		for j := 1; j <= serverCount; j++ {
 			serverCreate := &models.ServerCreate{
-				Meta:               map[string]string{
-					"user:project": batchCreateServersForm.Project,
+				Meta: map[string]string{
+					"user:project":     batchCreateServersForm.Project,
 					"user:batchNumber": batchNumber,
-					"user:cloudBatch": "true",
+					"user:cloudBatch":  "true",
 				},
 				AutoStart:          true,
 				GenerateName:       fmt.Sprintf("%s-%s-%s-%d", batchCreateServersForm.Project, batchNumber, zone.ID, j),
@@ -808,20 +838,131 @@ func BatchCreateServers(batchCreateServersForm models.BatchCreateServersForm) (b
 		logging.Logger.Debugf("zone: %s end", zone.Name)
 	}
 
-	idsJson, err := json.Marshal(ids)
-	if err != nil {
-		return nil, nil, err
-	}
-	err = gleveldb.Save(fmt.Sprintf("servers-%s-%s", batchCreateServersForm.Project, batchNumber), string(idsJson))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return &models.BatchCreateServersResponse{
+	batchCreateServersResponse = &models.BatchCreateServersResponse{
 		Ids:         ids,
 		Count:       len(ids),
 		Project:     batchCreateServersForm.Project,
 		Provider:    batchCreateServersForm.Provider,
 		BatchNumber: batchNumber,
-	}, nil, err
+	}
+
+	go updateCreateServerStatus(batchNumber, batchCreateServersForm.Count)
+	return batchCreateServersResponse, nil, err
+}
+
+func updateCreateServerStatus(batchNumber string, createCount int) {
+	var (
+		shortServersResponse *models.ShortServersResponse
+		err                  error
+	)
+	// 按批号查询  running、deploy_fail 两种状态的主机，一直到 与createCount相同退出
+	for i := 0; i < 60; i++ {
+		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail"})
+
+		if err != nil {
+			logging.Logger.Errorf("QueryCreateServersTotal err: %v", err)
+			continue
+		}
+
+		if shortServersResponse == nil {
+			logging.Logger.Error("shortServersResponse is nil")
+			continue
+		}
+
+		if shortServersResponse.Total == createCount {
+			break
+		}
+
+		if i == 59 {
+			err = gredis.Set(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber), ServerCreateTimeout, ServerCreateServersStatusTTL)
+			if err != nil {
+				logging.Logger.Errorf("gredis.Set %s", err)
+			}
+			logging.Logger.Errorf("%s 创建主机查询状态超时", batchNumber)
+			break
+		}
+		time.Sleep(time.Second * 5)
+	}
+
+	serversJson, err := json.Marshal(shortServersResponse)
+	if err != nil {
+		logging.Logger.Errorf("json.Marshal(shortServersResponse) err: %v", err)
+		return
+	}
+
+	err = gredis.Set(fmt.Sprintf("%s-%s", ShortServersResponseSaveKeyPre, batchNumber), string(serversJson), ServerCreateServersStatusDoneTTL)
+	if err != nil {
+		logging.Logger.Errorf("json.Marshal(shortServersResponse) err: %v", err)
+		return
+	}
+
+	err = gredis.Set(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber), ServerCreateDone, ServerCreateServersStatusDoneTTL)
+	if err != nil {
+		logging.Logger.Errorf("redis.Set %s", err)
+	}
+}
+
+func QueryCreateServersTotal(batchNumber string, status []string) (*models.ShortServersResponse, error) {
+	urlValues := url.Values{}
+	// 查询过滤字段
+	// 默认提供 tags.0.key tags.0.values 所以这里从1开始
+	if batchNumber != "" {
+		urlValues.Set("tags.1.key", "user:batchNumber")
+		urlValues.Set("tags.1.value", batchNumber)
+	}
+
+	// eip 不能为空
+	urlValues.Add("filter", "eip.isnullorempty('')")
+
+	for _, s := range status {
+		urlValues.Add("status", s)
+		urlValues.Add("status", s)
+	}
+	resp, _, err := ListServers(nil, urlValues)
+	if err != nil {
+		return nil, err
+	}
+	shortServersResponse := new(models.ShortServersResponse)
+	err = json.Unmarshal(resp, shortServersResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return shortServersResponse, nil
+}
+
+func DeleteFailServer() error {
+
+	// 查询部署失败的主机
+	shortServersResponse, err := QueryCreateServersTotal("", []string{"deploy_fail"})
+	if err != nil {
+		return err
+	}
+
+	// 删除部署失败主机
+	for _, server := range shortServersResponse.Servers {
+		_, _, err := DeleteServer(server.ID, nil)
+		if err != nil {
+			logging.Logger.Errorf("DeleteServer %s err :%v ", server.ID, err)
+		}
+	}
+	return nil
+}
+
+func GetCreateServersByBatchNumber(batchNumber string) (*models.ShortServersResponse, error) {
+	shortServersResponseJson, err := gredis.Get(fmt.Sprintf("%s-%s", ShortServersResponseSaveKeyPre, batchNumber)).Result()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	shortServersResponse := new(models.ShortServersResponse)
+	err = gjson.DecodeTo(shortServersResponseJson, shortServersResponse)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if shortServersResponse.Total == 0 {
+		return nil, errors.New("BfsUpdateValuesByServers shortServersResponse total is 0")
+	}
+	return shortServersResponse, nil
 }

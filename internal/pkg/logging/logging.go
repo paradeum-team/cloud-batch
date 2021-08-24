@@ -3,8 +3,8 @@ package logging
 import (
 	"cloud-batch/configs"
 	"cloud-batch/internal/pkg/clean"
-	"cloud-batch/internal/pkg/file"
 	"fmt"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/kataras/golog"
 	"github.com/lestrrat-go/file-rotatelogs"
 	"github.com/robfig/cron"
@@ -85,10 +85,18 @@ func Cron() {
 
 func GetRotatelogsWriter(prefix string) *rotatelogs.RotateLogs {
 	logDir := fmt.Sprintf("%s/%s", configs.Server.RuntimeRootPath, configs.LogConfig.Path)
-	err := file.CheckMediaPath(logDir)
-	if err != nil {
-		log.Fatalf("%+v", err)
+	ok := gfile.Exists(logDir)
+	if !ok {
+		err := gfile.Mkdir(logDir)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+	ok = gfile.IsWritable(logDir)
+	if !ok {
+		log.Fatalf("No permission to write %s", logDir)
+	}
+
 	logInfoPath := fmt.Sprintf("%s/%s.%s", logDir, prefix, configs.Server.HostName) + ".%Y%m%d.log"
 	w, err := rotatelogs.New(
 		logInfoPath,

@@ -12,6 +12,7 @@ require (
 	github.com/gin-gonic/gin v1.7.3
 	github.com/go-playground/validator/v10 v10.8.0
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/gogf/gf v1.13.7
 	github.com/kataras/golog v0.1.7
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
@@ -19,11 +20,14 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.1.2
 	github.com/paradeum-team/gin-prometheus-ext v0.4.0
 	github.com/pkg/errors v0.9.1
+	github.com/relex/aini v1.5.0
 	github.com/robfig/cron v1.2.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.3.1
 	github.com/swaggo/swag v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/vearne/golib v0.1.5
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/text v0.3.6
+	gopkg.in/redis.v5 v5.2.9
 )

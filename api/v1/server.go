@@ -5,7 +5,7 @@ import (
 	"cloud-batch/internal/pkg/app"
 	"cloud-batch/internal/pkg/e"
 	"cloud-batch/internal/pkg/logging"
-	"cloud-batch/internal/service/servie_cloudpods"
+	"cloud-batch/internal/service/service_cloudpods"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -35,7 +35,7 @@ func BatchCreateServers(c *gin.Context) {
 		appG.ResponseI18nMsgSimple(code, err, nil)
 		return
 	}
-	resp, cloudErr, err := servie_cloudpods.BatchCreateServers(createServersForm)
+	resp, cloudErr, err := service_cloudpods.BatchCreateServers(createServersForm)
 	if err != nil {
 		if cloudErr != nil {
 			logging.Logger.Errorf("BatchCreateServers cloudErr: %v", cloudErr)
@@ -51,7 +51,7 @@ func BatchCreateServers(c *gin.Context) {
 // @Summary Batch Get Servers
 // @Tags Servers
 // @Produce  json
-// @Param project query string false "project" enums(bfs,dfs,test)
+// @Param project query string false "project" default(test)
 // @Param provider query string false "provider" enums(aliyun)
 // @Param status query []string false "status" enums(running,deploying,starting,deploy_fail,unknown)
 // @Param batch_number query string false "batch_number"
@@ -104,7 +104,9 @@ func BatchGetServers(c *gin.Context) {
 	}
 
 	// 查询过滤字段
-	urlValues.Set("provider", provider)
+	if provider != "" {
+		urlValues.Set("provider", provider)
+	}
 	// 默认提供 tags.0.key tags.0.values 所以这里从1开始
 	urlValues.Set("tags.1.key", "user:project")
 	if project != "" {
@@ -115,7 +117,7 @@ func BatchGetServers(c *gin.Context) {
 		urlValues.Set("tags.2.value", batchNumber)
 	}
 
-	resp, _, err := servie_cloudpods.ListServers(nil, urlValues)
+	resp, _, err := service_cloudpods.ListServers(nil, urlValues)
 	if err != nil {
 		appG.ResponseI18nMsgSimple(e.InternalError, err, nil)
 		return
@@ -158,14 +160,14 @@ func BatchDeleteServers(c *gin.Context) {
 		return
 	}
 
-	serverCount, doneCount, errIDs, err := servie_cloudpods.BatchDeleteServers(deleteServersForm)
+	serverCount, doneCount, errIDs, err := service_cloudpods.BatchDeleteServers(deleteServersForm)
 	if err != nil {
 		appG.ResponseI18nMsgSimple(e.InternalError, err, nil)
 		return
 	}
 
 	if serverCount == 0 {
-		appG.ResponseI18nMsgSimple(e.NotFound, errors.New("serverCount is 0"),nil)
+		appG.ResponseI18nMsgSimple(e.NotFound, errors.New("serverCount is 0"), nil)
 		return
 	}
 
