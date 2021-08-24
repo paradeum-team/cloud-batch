@@ -1,9 +1,9 @@
-package servie_cloudpods
+package service_cloudpods
 
 import (
 	"cloud-batch/configs"
 	"cloud-batch/internal/models"
-	"cloud-batch/internal/pkg/db/gleveldb"
+	"cloud-batch/internal/pkg/db/gredis"
 	"fmt"
 	"net/url"
 	"testing"
@@ -16,7 +16,7 @@ func TestLoginCloudPods(t *testing.T) {
 		return
 	}
 
-	cookieJson, err := gleveldb.Get(authKey)
+	cookieJson, err := gredis.Get(authKey).Result()
 	if err != nil {
 		t.Error(err)
 		return
@@ -27,6 +27,7 @@ func TestLoginCloudPods(t *testing.T) {
 }
 
 func TestGetAuth(t *testing.T) {
+	TestLoginCloudPods(t)
 	auth, err := GetAuth()
 	if err != nil {
 		t.Error(err)

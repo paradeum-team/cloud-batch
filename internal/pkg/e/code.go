@@ -1,6 +1,7 @@
 package e
 
 import (
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -40,4 +41,41 @@ var (
 	ParametherNotAllowedEmpty = New("ParametherNotAllowedEmpty", http.StatusBadRequest) // {{.Name))参数不允许为空
 	InvalidParameterValue     = New("InvalidParameterValue", http.StatusBadRequest)     // 参数{{.Name))值校验不通过, 用于确定单一参数
 	NotFound                  = New("NotFound", http.StatusNotFound)
+)
+
+var (
+	ErrServerCreating          = errors.New("主机创建中，请稍后。")
+	ErrServerCreateTimeout     = errors.New("主机创建超时，请联系管理员。")
+	ErrServerCreateError       = errors.New("主机创建失败，请联系管理员。")
+	ErrUnknownError            = errors.New("未知错误")
+	ErrServerCreateStatusEmpty = errors.New("该批次主机创建列表为空，请重新创建。")
+
+	ErrStatusEmpty    = errors.New("status empty.")
+	ErrStatusCreating = errors.New("创建中，请稍后。")
+	ErrStatusTimeout  = errors.New("操作超时，请联系管理员。")
+	ErrStatusStart    = errors.New("正在进行中, 请稍后。")
+	ErrStatusError    = errors.New("操作失败。")
+	ErrStatusDone     = errors.New("已经完成。")
+	ErrStatusConflict = errors.New("操作冲突, 请联系管理员。")
+)
+
+func GetCodeByErr(err error) ErrorCode {
+	if errors.Is(err, ErrServerCreating) {
+		return Asynchronization
+	}
+	if errors.Is(err, ErrStatusStart) {
+		return Asynchronization
+	}
+	if errors.Is(err, ErrStatusDone) {
+		return StatusOK
+	}
+	return InternalError
+}
+
+const (
+	StatusStart    = "start"
+	StatusError    = "error"
+	StatusDone     = "done"
+	StatusConflict = "conflict"
+	StatusTimeout  = "timeout"
 )
