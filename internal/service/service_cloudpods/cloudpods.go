@@ -859,6 +859,15 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 	)
 	// 按批号查询  running、deploy_fail、disk_file 两种状态的主机，一直到 与createCount相同退出
 	for i := 0; i < 60; i++ {
+		if i >= 59 {
+			err = gredis.Set(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber), ServerCreateTimeout, ServerCreateServersStatusTTL)
+			if err != nil {
+				logging.Logger.Errorf("gredis.Set %s", err)
+			}
+			logging.Logger.Errorf("%s 创建主机查询状态超时", batchNumber)
+			break
+		}
+
 		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail"})
 
 		if err != nil {
@@ -866,21 +875,22 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 			continue
 		}
 
-		if shortServersResponse == nil {
+		if shortServersResponse == nil || shortServersResponse.Total == 0 {
 			logging.Logger.Error("shortServersResponse is nil")
 			continue
 		}
 
 		if shortServersResponse.Total == createCount {
-			break
-		}
-
-		if i == 59 {
-			err = gredis.Set(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber), ServerCreateTimeout, ServerCreateServersStatusTTL)
-			if err != nil {
-				logging.Logger.Errorf("gredis.Set %s", err)
+			isErr := false
+			for _,s := range shortServersResponse.Servers {
+				if s.Eip == "" {
+					isErr = true
+					break
+				}
 			}
-			logging.Logger.Errorf("%s 创建主机查询状态超时", batchNumber)
+			if isErr {
+				continue
+			}
 			break
 		}
 		time.Sleep(time.Second * 5)
