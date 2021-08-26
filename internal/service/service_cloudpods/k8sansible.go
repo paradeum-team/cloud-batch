@@ -21,9 +21,9 @@ import (
 const (
 	UpdateK8sAnsibleHostsStatusKeyPre = "updateK8sAnsibleHostsStatus"
 	UpdateK8sAnsibleHostsTTL          = time.Second * 5
-	UpdateK8sAnsibleHostsDoneTTL = time.Hour * 24
-	AddK8sNodeStatusKey          = "addK8sNodeStatus"
-	AddK8sNodeTTL                = time.Minute * 30
+	UpdateK8sAnsibleHostsDoneTTL      = time.Hour * 24
+	AddK8sNodeStatusKey               = "addK8sNodeStatus"
+	AddK8sNodeTTL                     = time.Minute * 30
 	AddK8sNodeDoneTTL                 = time.Hour * 24
 )
 
@@ -64,7 +64,7 @@ func UpdateK8sAnsibleByServers(batchNumber string, k8sNodeSuf string) (*aini.Inv
 	}
 
 	if len(ansibleHosts.Groups["new_nodes"].Hosts) > 0 {
-		return nil, errors.New("new_nodes 组不为空，请联系管理员")
+		return nil, e.ErrAnsibleHostsNewNodesNotEmpty
 	}
 
 	updateK8sAnsibleHostsStatus, err := gredis.Get(fmt.Sprintf("%s-%s", UpdateK8sAnsibleHostsStatusKeyPre, batchNumber)).Result()
@@ -153,7 +153,7 @@ func K8sAddNode(batchNumber string) error {
 	}
 
 	// 判断 ansible hosts 修改状态
-	updateK8sAnsibleHostsStatus, err := gredis.Get(fmt.Sprintf("%s-%s",UpdateK8sAnsibleHostsStatusKeyPre,batchNumber)).Result()
+	updateK8sAnsibleHostsStatus, err := gredis.Get(fmt.Sprintf("%s-%s", UpdateK8sAnsibleHostsStatusKeyPre, batchNumber)).Result()
 	if err != nil {
 		// 如果redis 返回的不是 nil 错误，返回
 		if !errors.Is(err, redis.Nil) {
@@ -164,7 +164,6 @@ func K8sAddNode(batchNumber string) error {
 	if updateK8sAnsibleHostsStatus != e.StatusDone {
 		return errors.Errorf("batchNumber %s ansible hosts 更新未完成", batchNumber)
 	}
-
 
 	err = gredis.Set(AddK8sNodeStatusKey, e.StatusStart, AddK8sNodeTTL)
 	if err != nil {
