@@ -21,43 +21,11 @@ import (
 const (
 	UpdateK8sAnsibleHostsStatusKeyPre = "updateK8sAnsibleHostsStatus"
 	UpdateK8sAnsibleHostsTTL          = time.Second * 5
-	UpdateK8sAnsibleHostsDoneTTL      = time.Hour * 24
-	AddK8sNodeStatusKeyPre            = "addK8sNodeStatus"
-	AddK8sNodeTTL                     = time.Minute * 30
+	UpdateK8sAnsibleHostsDoneTTL = time.Hour * 24
+	AddK8sNodeStatusKey          = "addK8sNodeStatus"
+	AddK8sNodeTTL                = time.Minute * 30
 	AddK8sNodeDoneTTL                 = time.Hour * 24
 )
-
-func GetUpdateK8sAnsibleHostsError(status string) error {
-	switch status {
-	case e.StatusStart:
-		return e.ErrStatusStart
-	case e.StatusError:
-		return e.ErrStatusError
-	case e.StatusConflict:
-		return e.ErrStatusConflict
-	case e.StatusDone:
-		return e.ErrStatusDone
-	case "":
-		return nil
-	default:
-		return e.ErrUnknownError
-	}
-}
-
-func GetAddK8sNodeError(status string) error {
-	switch status {
-	case e.StatusStart:
-		return e.ErrStatusStart
-	case e.StatusError:
-		return e.ErrStatusError
-	case e.StatusDone:
-		return e.ErrStatusDone
-	case "":
-		return nil
-	default:
-		return e.ErrUnknownError
-	}
-}
 
 func UpdateK8sAnsibleByServers(batchNumber string, k8sNodeSuf string) (*aini.InventoryData, error) {
 
@@ -70,10 +38,9 @@ func UpdateK8sAnsibleByServers(batchNumber string, k8sNodeSuf string) (*aini.Inv
 		}
 	}
 
-	// 根据状态返回相应的错误
-	err = GetServerCreateError(serverCreateServersStatus)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	// 不是完成状态就是创建中，不处理中间状态
+	if serverCreateServersStatus != e.StatusDone {
+		return nil, e.ErrServerCreating
 	}
 
 	// cpoy初始 hosts.init
@@ -108,11 +75,8 @@ func UpdateK8sAnsibleByServers(batchNumber string, k8sNodeSuf string) (*aini.Inv
 		}
 	}
 
-	err = GetUpdateK8sAnsibleHostsError(updateK8sAnsibleHostsStatus)
-	if err != nil {
-		if errors.Is(err, e.ErrStatusDone) {
-			return ansibleHosts, errors.WithStack(err)
-		}
+	if updateK8sAnsibleHostsStatus == e.StatusDone {
+		return ansibleHosts, nil
 	}
 
 	// 设置开始更新状态
@@ -174,22 +138,22 @@ func UpdateK8sAnsibleByServers(batchNumber string, k8sNodeSuf string) (*aini.Inv
 	return ansibleHosts, nil
 }
 
-func K8sAddNodeByBatchNumber(batchNumber string) error {
-
-	addK8sNodeStatus, err := gredis.Get(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber)).Result()
+func K8sAddNode(batchNumber string) error {
+	addK8sNodeStatus, err := gredis.Get(AddK8sNodeStatusKey).Result()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = GetAddK8sNodeError(addK8sNodeStatus)
-	if err != nil {
-		if errors.Is(err, e.ErrStatusError) || errors.Is(err, e.ErrStatusDone) {
-			return err
-		}
+	if addK8sNodeStatus == e.StatusStart {
+		return e.ErrStatusStart
+	}
+
+	if addK8sNodeStatus == e.StatusDone {
+		return nil
 	}
 
 	// 判断 ansible hosts 修改状态
-	updateK8sAnsibleHostsStatus, err := gredis.Get(fmt.Sprintf("%s-%s", UpdateK8sAnsibleHostsStatusKeyPre, batchNumber)).Result()
+	updateK8sAnsibleHostsStatus, err := gredis.Get(fmt.Sprintf("%s-%s",UpdateK8sAnsibleHostsStatusKeyPre,batchNumber)).Result()
 	if err != nil {
 		// 如果redis 返回的不是 nil 错误，返回
 		if !errors.Is(err, redis.Nil) {
@@ -197,24 +161,22 @@ func K8sAddNodeByBatchNumber(batchNumber string) error {
 		}
 	}
 
-	err = GetUpdateK8sAnsibleHostsError(updateK8sAnsibleHostsStatus)
-	if err != nil {
-		if errors.Is(err, e.ErrStatusDone) {
-			return errors.WithStack(err)
-		}
+	if updateK8sAnsibleHostsStatus != e.StatusDone {
+		return errors.Errorf("batchNumber %s ansible hosts 更新未完成", batchNumber)
 	}
 
-	err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusStart, AddK8sNodeTTL)
-	if err != nil {
-		return errors.WithStack(err)
-	}
 
-	go addK8sNodes(batchNumber)
+	err = gredis.Set(AddK8sNodeStatusKey, e.StatusStart, AddK8sNodeTTL)
+	if err != nil {
+		logging.Logger.Errorf("addK8sNodes set AddK8sNodeStatusKey err: %v", err)
+		return nil
+	}
+	go addK8sNodes()
 
 	return nil
 }
 
-func addK8sNodes(batchNumber string) {
+func addK8sNodes() {
 	// 超时机制
 	ctxt, cancel := context.WithTimeout(context.Background(), AddK8sNodeTTL)
 	defer cancel()
@@ -224,22 +186,24 @@ func addK8sNodes(batchNumber string) {
 	cmd.Stderr = &buf
 
 	if err := cmd.Start(); err != nil {
-		err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusError, AddK8sNodeTTL)
-		if err != nil {
+		if err := gredis.Set(AddK8sNodeStatusKey, e.StatusError, AddK8sNodeTTL); err != nil {
 			logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v", err)
 		}
-		logging.Logger.Errorf("addK8sNodes start err: +v", err)
+		logging.Logger.Errorf("addK8sNodes start err: %+v", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		err = gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusError, AddK8sNodeTTL)
-		if err != nil {
+		if err := gredis.Set(AddK8sNodeStatusKey, e.StatusError, AddK8sNodeTTL); err != nil {
 			logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v", err)
 		}
 		logging.Logger.Errorf("addK8sNodes wait err: %+v", err)
 	}
 
-	if err := gredis.Set(fmt.Sprintf("%s-%s", AddK8sNodeStatusKeyPre, batchNumber), e.StatusError, AddK8sNodeDoneTTL); err != nil {
+	if err := gredis.Set(AddK8sNodeStatusKey, e.StatusError, AddK8sNodeDoneTTL); err != nil {
 		logging.Logger.Errorf("Set AddK8sNodeStatus err: %+v", err)
+	}
+
+	if err := gredis.Del(AddK8sNodeStatusKey); err != nil {
+		logging.Logger.Errorf("Del AddK8sNodeStatus err: %+v", err)
 	}
 }

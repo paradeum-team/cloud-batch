@@ -50,7 +50,7 @@ var (
 	ErrUnknownError            = errors.New("未知错误")
 	ErrServerCreateStatusEmpty = errors.New("该批次主机创建列表为空，请重新创建。")
 
-	ErrStatusEmpty    = errors.New("status empty.")
+	ErrStatusEmpty    = errors.New("状态为空.")
 	ErrStatusCreating = errors.New("创建中，请稍后。")
 	ErrStatusTimeout  = errors.New("操作超时，请联系管理员。")
 	ErrStatusStart    = errors.New("正在进行中, 请稍后。")
@@ -78,4 +78,5 @@ const (
 	StatusDone     = "done"
 	StatusConflict = "conflict"
 	StatusTimeout  = "timeout"
+	StatusEmpty = ""
 )
