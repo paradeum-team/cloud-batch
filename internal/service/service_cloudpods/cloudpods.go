@@ -867,6 +867,7 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 			logging.Logger.Errorf("%s 创建主机查询状态超时", batchNumber)
 			break
 		}
+		time.Sleep(time.Second * 5)
 
 		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail"})
 
@@ -882,7 +883,7 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 
 		if shortServersResponse.Total == createCount {
 			isErr := false
-			for _,s := range shortServersResponse.Servers {
+			for _, s := range shortServersResponse.Servers {
 				if s.Eip == "" {
 					isErr = true
 					break
@@ -893,7 +894,6 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 			}
 			break
 		}
-		time.Sleep(time.Second * 5)
 	}
 
 	serversJson, err := json.Marshal(shortServersResponse)

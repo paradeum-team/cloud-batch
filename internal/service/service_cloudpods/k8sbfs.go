@@ -5,6 +5,7 @@ import (
 	"cloud-batch/internal/models"
 	"cloud-batch/internal/pkg/db/gredis"
 	"cloud-batch/internal/pkg/e"
+	"cloud-batch/internal/pkg/logging"
 	"fmt"
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/os/gfile"
@@ -99,6 +100,7 @@ func BfsUpdateValuesByServers(batchNumber string) (*models.BfsValues, error) {
 	for _, server := range shortServersResponse.Servers {
 
 		if nodesMap[server.Eip] == server.Eip {
+			logging.Logger.Errorf("not equals %s %s", nodesMap[server.Eip], server.Eip)
 			return nil, errors.WithStack(e.ErrStatusConflict)
 		}
 
