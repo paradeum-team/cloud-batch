@@ -859,23 +859,7 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 	)
 	// 按批号查询  running、deploy_fail、disk_file 两种状态的主机，一直到 与createCount相同退出
 	for i := 0; i < 60; i++ {
-		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail"})
-
-		if err != nil {
-			logging.Logger.Errorf("QueryCreateServersTotal err: %v", err)
-			continue
-		}
-
-		if shortServersResponse == nil {
-			logging.Logger.Error("shortServersResponse is nil")
-			continue
-		}
-
-		if shortServersResponse.Total == createCount {
-			break
-		}
-
-		if i == 59 {
+		if i >= 59 {
 			err = gredis.Set(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber), ServerCreateTimeout, ServerCreateServersStatusTTL)
 			if err != nil {
 				logging.Logger.Errorf("gredis.Set %s", err)
@@ -884,6 +868,32 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 			break
 		}
 		time.Sleep(time.Second * 5)
+
+		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail"})
+
+		if err != nil {
+			logging.Logger.Errorf("QueryCreateServersTotal err: %v", err)
+			continue
+		}
+
+		if shortServersResponse == nil || shortServersResponse.Total == 0 {
+			logging.Logger.Error("shortServersResponse is nil")
+			continue
+		}
+
+		if shortServersResponse.Total == createCount {
+			isErr := false
+			for _, s := range shortServersResponse.Servers {
+				if s.Eip == "" {
+					isErr = true
+					break
+				}
+			}
+			if isErr {
+				continue
+			}
+			break
+		}
 	}
 
 	serversJson, err := json.Marshal(shortServersResponse)

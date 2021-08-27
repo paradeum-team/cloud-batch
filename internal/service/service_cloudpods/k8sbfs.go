@@ -5,6 +5,7 @@ import (
 	"cloud-batch/internal/models"
 	"cloud-batch/internal/pkg/db/gredis"
 	"cloud-batch/internal/pkg/e"
+	"cloud-batch/internal/pkg/logging"
 	"fmt"
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/os/gfile"
@@ -21,23 +22,6 @@ const (
 	UpdateBfsValuesStatusDoneTTL = time.Hour * 24
 )
 
-func GetUpdateBfsValuesError(status string) error {
-	switch status {
-	case e.StatusStart:
-		return e.ErrStatusStart
-	case e.StatusError:
-		return e.ErrStatusError
-	case e.StatusConflict:
-		return e.ErrStatusConflict
-	case e.StatusDone:
-		return e.ErrStatusDone
-	case "":
-		return nil
-	default:
-		return e.ErrUnknownError
-	}
-}
-
 func BfsUpdateValuesByServers(batchNumber string) (*models.BfsValues, error) {
 	serverCreateServersStatus, err := gredis.Get(fmt.Sprintf("%s-%s", ServerCreateServersStatus, batchNumber)).Result()
 	if err != nil {
@@ -47,10 +31,9 @@ func BfsUpdateValuesByServers(batchNumber string) (*models.BfsValues, error) {
 		}
 	}
 
-	// 根据状态返回相应的错误
-	err = GetServerCreateError(serverCreateServersStatus)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	// 不是完成状态就是创建中，不处理中间状态
+	if serverCreateServersStatus != e.StatusDone {
+		return nil, e.ErrServerCreating
 	}
 
 	// 生成初始备份文件
@@ -87,12 +70,8 @@ func BfsUpdateValuesByServers(batchNumber string) (*models.BfsValues, error) {
 		}
 	}
 
-	err = GetUpdateBfsValuesError(updateBfsValuesStatus)
-	if err != nil {
-		if errors.Is(err, e.ErrStatusDone) {
-			return bfsValues, errors.WithStack(err)
-		}
-		return nil, errors.WithStack(err)
+	if updateBfsValuesStatus == e.StatusDone {
+		return bfsValues, nil
 	}
 
 	// 设置开始更新状态
@@ -121,6 +100,7 @@ func BfsUpdateValuesByServers(batchNumber string) (*models.BfsValues, error) {
 	for _, server := range shortServersResponse.Servers {
 
 		if nodesMap[server.Eip] == server.Eip {
+			logging.Logger.Errorf("not equals %s %s", nodesMap[server.Eip], server.Eip)
 			return nil, errors.WithStack(e.ErrStatusConflict)
 		}
 
