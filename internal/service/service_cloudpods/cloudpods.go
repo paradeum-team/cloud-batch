@@ -568,7 +568,6 @@ func ListServers(queryParams map[string]string, urlValues url.Values) ([]byte, *
 
 	defaultQueryParams := map[string]string{
 		"enabled":      "true",
-		"cloud_env":    "public",
 		"with_meta":    "true",
 		"tags.0.key":   "user:cloudBatch",
 		"tags.0.value": "true",
@@ -869,7 +868,7 @@ func updateCreateServerStatus(batchNumber string, createCount int) {
 		}
 		time.Sleep(time.Second * 5)
 
-		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail"})
+		shortServersResponse, err = QueryCreateServersTotal(batchNumber, []string{"running", "deploy_fail", "disk_fail", "sched_fail"})
 
 		if err != nil {
 			logging.Logger.Errorf("QueryCreateServersTotal err: %v", err)
