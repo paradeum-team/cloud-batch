@@ -185,6 +185,51 @@ var doc = `{
                 }
             }
         },
+        "/batch/k8sAddNodeByBatchNumber": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "K8s"
+                ],
+                "summary": "K8s Ansible Update Hosts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "batchNumber",
+                        "name": "batch_number",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseString"
+                        }
+                    }
+                }
+            }
+        },
         "/batch/k8sAnsibleUpdateHosts": {
             "post": {
                 "security": [
@@ -553,20 +598,6 @@ var doc = `{
                     "default": "aliyun",
                     "enum": [
                         "aliyun"
-                    ]
-                },
-                "region_scope": {
-                    "description": "区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东",
-                    "type": "string",
-                    "default": "cnml",
-                    "enum": [
-                        "all",
-                        "cnml",
-                        "cn",
-                        "us",
-                        "ap",
-                        "me",
-                        "eu"
                     ]
                 }
             }

@@ -664,7 +664,9 @@ func BatchDeleteServers(deleteServersForm models.BatchDeleteServersForm) (server
 	urlValues := url.Values{}
 
 	// 查询过滤字段
-	urlValues.Set("provider", deleteServersForm.Provider)
+	if deleteServersForm.Provider != "" {
+		urlValues.Set("provider", deleteServersForm.Provider)
+	}
 	urlValues.Set("tags.1.key", "user:project")
 	if deleteServersForm.Project != "" {
 		urlValues.Set("tags.1.value", deleteServersForm.Project)
@@ -945,7 +947,7 @@ func QueryCreateServersTotal(batchNumber string, status []string) (*models.Short
 func DeleteFailServer() error {
 
 	// 查询部署失败的主机
-	shortServersResponse, err := QueryCreateServersTotal("", []string{"deploy_fail"})
+	shortServersResponse, err := QueryCreateServersTotal("", []string{"deploy_fail", "disk_fail", "sched_fail"})
 	if err != nil {
 		return err
 	}
