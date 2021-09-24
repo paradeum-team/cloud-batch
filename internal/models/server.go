@@ -38,14 +38,12 @@ type BatchCreateServersForm struct {
 type BatchDeleteServersForm struct {
 	// 主机 ids, 如果设置了 ids, 忽略其它参数
 	IDs []string `json:"ids"`
-	// 区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东
-	RegionScope string `json:"region_scope" binding:"min=2,max=10" enums:"all,cnml,cn,us,ap,me,eu" default:"cnml"`
 	// 创建主机的批号
 	BatchNumber string `json:"batch_number" binding:"min=0,max=50" minLength:"14" maxLength:"50"`
 	// 项目标签
 	Project string `json:"project" binding:"min=2,max=20" default:"test" required:"true"`
 	// 云提供者
-	Provider string `json:"provider" binding:"min=2,max=20" enums:"aliyun" default:"aliyun" required:"true"`
+	Provider string `json:"provider" binding:"min=0,max=20" enums:"aliyun" default:"aliyun" required:"false"`
 }
 
 type BatchCreateServersResponse struct {

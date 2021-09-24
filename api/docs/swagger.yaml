@@ -98,18 +98,6 @@ definitions:
         enum:
         - aliyun
         type: string
-      region_scope:
-        default: cnml
-        description: '区域前缀: all 全部, cnml 中国大陆, cn 中国， ap 亚太， us 美洲， eu 欧洲, me 中东'
-        enum:
-        - all
-        - cnml
-        - cn
-        - us
-        - ap
-        - me
-        - eu
-        type: string
     type: object
 info:
   contact: {}
@@ -221,6 +209,34 @@ paths:
       summary: Update Bfs Values
       tags:
       - Bfs
+  /batch/k8sAddNodeByBatchNumber:
+    post:
+      parameters:
+      - description: batchNumber
+        in: query
+        name: batch_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app.ResponseString'
+      security:
+      - ApiKeyAuth: []
+      summary: K8s Ansible Update Hosts
+      tags:
+      - K8s
   /batch/k8sAnsibleUpdateHosts:
     post:
       parameters:
