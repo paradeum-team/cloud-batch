@@ -1,6 +1,6 @@
-FROM quay.io/ss75710541/golang:1.16
+FROM golang:1.17
 
-ENV GOPROXY=https://goproxy.io
+ENV GOPROXY=https://goproxy.cn
 
 COPY ./ /go/src/cloud-batch
 WORKDIR /go/src/cloud-batch
