@@ -714,7 +714,7 @@ func BatchCreateServers(batchCreateServersForm models.BatchCreateServersForm) (b
 
 	zonesUrlValues := url.Values{}
 	// 过滤主机类型
-	instanceTypeFamilys := "'c7','c6','c6a','c5','c4'"
+	instanceTypeFamilys := "'c7','c6','c6a','c5','c4','ic5'"
 	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).instance_type_family.in(%s)", instanceTypeFamilys))
 	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).sys_disk_type.contains.('%s')", models.AliyunDiskCloudEfficiency))
 	zonesUrlValues.Add("joint_filter", fmt.Sprintf("serverskus.zone_id(id).sys_disk_type.cpu_core_count.equals.('%d')", batchCreateServersForm.CpuCoreCount))

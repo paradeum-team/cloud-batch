@@ -9,7 +9,7 @@ type redis struct {
 	Host string `split_words:"true" required:"true"`
 	Port int    `split_words:"true" default:"6379"`
 	Pass string `split_words:"true" required:"false"`
-	DB   int    `split_words:"true" required:"true"`
+	DB   int    `split_words:"true" required:"true" default:"0"`
 }
 
 var Redis redis
